@@ -71,7 +71,6 @@ public class AccountController {
 
     @FXML
 private void onSignUp(ActionEvent event) throws Exception {
-    // Überprüfe Benutzername, Passwort und bestätigtes Passwort
     String name = tfSignUpEmail.getText();
     if (name.isEmpty()) {
         lbSignUpMessage.setText("Type in email");
@@ -89,45 +88,54 @@ private void onSignUp(ActionEvent event) throws Exception {
         return;
     }
 
-    // Überprüfe, ob der Benutzer bereits existiert (Einmalige Überprüfung hier im Controller)
+    // Check password strength
+    if (!account.isPasswordStrong(pw)) {
+        lbSignUpMessage.setText("Password must be at least 8 characters long, with uppercase, lowercase, digits, and special characters.");
+        return;
+    }
+
     if (account.verifyAccount(name)) {
         lbSignUpMessage.setText("Email " + name + " has already an account");
         return;
     }
     
-    // Füge neuen Benutzer hinzu, ohne weitere Überprüfung innerhalb von addAccount
-    account.addAccount(name, pw);
-    
-    // Bestätigungsnachricht und Tabwechsel nach erfolgreicher Registrierung
-    lbSignUpMessage.setText("Registration successful. Welcome!");
-    
-    // Wähle den Tab 'Log In'
-    tabPane.getTabs().get(0).setDisable(true);
-    
-    // Reset Login und SignUp Felder
-    resetLogin();
-    resetSignup();
-    
-    // Wähle den Tab 'Log in'
-    tabPane.getSelectionModel().select(1);
+    // Add account only if password is strong
+    boolean isAdded = account.addAccount(name, pw);
+    if (isAdded) {
+        lbSignUpMessage.setText("Registration successful. Welcome!");
+        tabPane.getTabs().get(0).setDisable(true);
+        resetLogin();
+        resetSignup();
+        tabPane.getSelectionModel().select(1);
+    } else {
+        lbSignUpMessage.setText("Registration failed. Check your inputs.");
+    }
 }
 
 
-    @FXML
-    private void onLogin(ActionEvent event) {
-        String name = tfUsername.getText();
-        String pw = pfLoginPassword.getText();
-                        
-        if (account.verifyPassword(name, pw)) {
-            tabPane.getTabs().get(0).setDisable(true);
-            tabPane.getTabs().get(1).setDisable(true);
-            tabPane.getTabs().get(2).setDisable(false);
-            tabPane.getSelectionModel().select(2);
-        } else {
-            lbLoginMessage.setText("'Email' or 'Password' are wrong");
-            tabPane.getTabs().get(0).setDisable(false);
-        }
+
+@FXML
+private void onLogin(ActionEvent event) {
+    String name = tfUsername.getText();
+    String pw = pfLoginPassword.getText();
+
+    if (account.isAccountLocked()) {
+        lbLoginMessage.setText("Account is locked due to too many failed attempts.");
+        return;
     }
+
+    if (account.verifyPassword(name, pw)) {
+        tabPane.getTabs().get(0).setDisable(true);
+        tabPane.getTabs().get(1).setDisable(true);
+        tabPane.getTabs().get(2).setDisable(false);
+        tabPane.getSelectionModel().select(2);
+        lbLoginMessage.setText("Login successful.");
+    } else {
+        int remainingAttempts = 3 - account.getFailedAttempts();
+        lbLoginMessage.setText("Incorrect email or password. Attempts remaining: " + remainingAttempts);
+    }
+}
+
    
     @FXML
     private void onLogout(ActionEvent event) {

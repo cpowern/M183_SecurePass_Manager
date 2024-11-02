@@ -22,6 +22,7 @@
          <content>
             <TabPane fx:id="tabPane" prefHeight="300.0" prefWidth="522.0" tabClosingPolicy="UNAVAILABLE">
               <tabs>
+                <!-- Sign Up Tab -->
                 <Tab text="Step 1: Sign Up">
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0">
@@ -61,17 +62,35 @@
                                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                                        </padding>
                                     </GridPane>
+                                    
+                                    <!-- Message Label -->
                                     <Label fx:id="lbSignUpMessage" text="Create Account">
                                        <font>
                                           <Font name="System Bold" size="12.0" />
                                        </font>
                                     </Label>
+                                    
+                                    <!-- Password Requirements Message -->
+<Label fx:id="lbPasswordRequirements" 
+       text="Password must be 8+ characters, include uppercase, lowercase, numbers, and symbols." 
+       wrapText="true">
+    <font>
+        <Font name="System Italic" size="12.0" />
+    </font>
+    <padding>
+        <Insets top="10.0" />
+    </padding>
+</Label>
+
+
                                  </children>
                               </VBox>
                            </children>
                         </AnchorPane>
                   </content>
                 </Tab>
+
+                <!-- Log In Tab -->
                 <Tab text="Step 2: Log In">
                   <content>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
@@ -96,15 +115,15 @@
                                        </rowConstraints>
                                        <children>
                                           <Label text="Email" />
-                                          <Label text="Password" GridPane.rowIndex="1" />
                                           <TextField fx:id="tfUsername" prefWidth="550.0" GridPane.columnIndex="1" />
+                                          <Label text="Password" GridPane.rowIndex="1" />
+                                          <PasswordField fx:id="pfLoginPassword" prefHeight="26.0" prefWidth="426.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                                          <Button fx:id="btLogin" mnemonicParsing="false" onAction="#onLogin" text="Log In" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                           <Label fx:id="lbLoginMessage" text="Login with your account" GridPane.columnIndex="1" GridPane.rowIndex="3">
                                              <font>
                                                 <Font name="System Bold" size="12.0" />
                                              </font>
                                           </Label>
-                                          <PasswordField fx:id="pfLoginPassword" prefHeight="26.0" prefWidth="426.0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                                          <Button fx:id="btLogin" mnemonicParsing="false" onAction="#onLogin" text="Log In" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                                        </children>
                                        <padding>
                                           <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -116,7 +135,9 @@
                         </AnchorPane>
                   </content>
                 </Tab>
-                  <Tab disable="true" text="Step3: Welcome">
+                
+                <!-- Welcome Tab -->
+                <Tab disable="true" text="Step 3: Welcome">
                     <content>
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                            <children>

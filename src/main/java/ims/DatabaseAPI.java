@@ -34,31 +34,40 @@ public class DatabaseAPI {
         }
     }
 
-    // Create the necessary tables with correct structure
-    private void createTables() {
-        dropTableIfExists("Users"); // Drop the Users table if it exists
-        createTable("Users", 
-                    "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                    "username VARCHAR UNIQUE NOT NULL, " +
-                    "email VARCHAR UNIQUE NOT NULL, " +
-                    "password_hash VARCHAR NOT NULL, " +
-                    "salt VARCHAR NOT NULL");
-    }
+    // Drop tables if they exist to reset the database structure
+private void createTables() {
+    
+    // Create Users table without the salt column
+    createTable("Users", 
+                "user_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "username VARCHAR UNIQUE NOT NULL, " +
+                "email VARCHAR UNIQUE NOT NULL, " +
+                "password_hash VARCHAR NOT NULL");
 
-    // Method to drop a table if it exists
-    private void dropTableIfExists(String tableName) {
-        try (Connection conn = DriverManager.getConnection(url)) {
-            if (conn != null) {
-                String sql = "DROP TABLE IF EXISTS " + tableName;
-                Statement stmt = conn.createStatement();
-                stmt.executeUpdate(sql);
-                System.out.println("Table " + tableName + " dropped successfully if it existed.");
-                stmt.close();
-            }
-        } catch (SQLException e) {
-            System.out.println("Error dropping table " + tableName + ": " + e.getMessage());
+    // Create UserSalt table to store the salt separately
+    createTable("UserSalt",
+                "user_id INTEGER PRIMARY KEY, " +
+                "salt VARCHAR NOT NULL, " +
+                "FOREIGN KEY(user_id) REFERENCES Users(user_id)");
+}
+
+
+
+    // Drop old Users table if it has the `salt` field (only if needed)
+private void dropTableIfExists(String tableName) {
+    try (Connection conn = DriverManager.getConnection(url)) {
+        if (conn != null) {
+            String sql = "DROP TABLE IF EXISTS " + tableName;
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+            System.out.println("Table " + tableName + " dropped successfully if it existed.");
+            stmt.close();
         }
+    } catch (SQLException e) {
+        System.out.println("Error dropping table " + tableName + ": " + e.getMessage());
     }
+}
+
 
     // Method to create a table
     public void createTable(String tableName, String fields) {  
