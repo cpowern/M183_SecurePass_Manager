@@ -1,20 +1,60 @@
 package ims;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
-import java.security.SecureRandom;
 import java.util.Base64;
 
 public class Account {
     private DatabaseAPI db;
-    private static final String PEPPER = "YourSecretPepperValue";  // Add a fixed pepper for security
+    private static final String PEPPER_FILE_PATH = "data/pepper.txt";
+    private static String pepper;
     private int failedAttempts = 0;  // Track failed login attempts
     private static final int MAX_FAILED_ATTEMPTS = 3;  // Max allowed failed attempts
 
     public Account() {
         db = new DatabaseAPI();
+        loadOrGeneratePepper();
+    }
+
+    private void loadOrGeneratePepper() {
+        try {
+            File pepperFile = new File(PEPPER_FILE_PATH);
+            if (!pepperFile.exists()) {
+                pepper = generatePepper();
+                savePepperToFile(pepper);
+                System.out.println("New pepper generated and saved.");
+            } else {
+                pepper = new String(Files.readAllBytes(Paths.get(PEPPER_FILE_PATH)));
+                System.out.println("Pepper loaded from file.");
+            }
+        } catch (IOException e) {
+            System.out.println("Error loading or generating pepper: " + e.getMessage());
+        }
+    }
+
+    private String generatePepper() {
+        SecureRandom sr = new SecureRandom();
+        byte[] pepperBytes = new byte[16];
+        sr.nextBytes(pepperBytes);
+        return Base64.getEncoder().encodeToString(pepperBytes);
+    }
+
+    private void savePepperToFile(String pepper) throws IOException {
+        File dataDirectory = new File("data");
+        if (!dataDirectory.exists()) {
+            dataDirectory.mkdirs();
+        }
+        try (FileWriter writer = new FileWriter(PEPPER_FILE_PATH)) {
+            writer.write(pepper);
+        }
     }
 
     public static String generateSalt() {
@@ -25,7 +65,7 @@ public class Account {
     }
 
     public static String hashPassword(String password, String salt) throws NoSuchAlgorithmException, InvalidKeySpecException {
-        String saltedPassword = password + PEPPER + salt;
+        String saltedPassword = password + pepper + salt;
         PBEKeySpec spec = new PBEKeySpec(saltedPassword.toCharArray(), salt.getBytes(), 10000, 512);
         SecretKeyFactory skf = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA512");
         byte[] hash = skf.generateSecret(spec).getEncoded();
@@ -69,7 +109,7 @@ public class Account {
     }
 
     public boolean verifyPassword(String username, String password) {
-        if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+        if (isAccountLocked()) {
             System.out.println("Account is locked due to too many failed attempts.");
             return false;
         }
@@ -105,10 +145,12 @@ public class Account {
         return db.isKeyAvailable("Users", "username", "'" + username + "'");
     }
 
+    // Getter for failed attempts
     public int getFailedAttempts() {
         return failedAttempts;
     }
 
+    // Check if account is locked
     public boolean isAccountLocked() {
         return failedAttempts >= MAX_FAILED_ATTEMPTS;
     }
